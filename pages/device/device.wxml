@@ -1,0 +1,23 @@
+<!--pages/device/device.wxml-->
+<view>
+  <button class="mg-10" size="mini" 
+    bindtap="createBLEConnection"  
+    disabled="{{connected}}">
+    {{isConnected ? '已连接' : '开始连接'}}
+  </button>
+  <button class="mg-10" size="mini" bindtap="closeBLEConnection"
+    disabled="{{!connected}}"  >
+    断开连接
+  </button>
+  <button class="mg-10" wx:if="{{canWrite}}" size="mini" bindtap="writeBLECharacteristicValue">写数据</button>
+  
+</view>
+<view class="connected_info" wx:if="{{connected}}">
+  <view>
+    <text>已连接到 {{name}}</text>
+  </view>
+  <view wx:for="{{chs}}" wx:key="index" style="font-size: 12px; margin-top: 10px;">
+    <view>特性UUID: {{item.uuid}}</view>
+    <view>特性值: {{item.value}}</view>
+  </view>
+</view>

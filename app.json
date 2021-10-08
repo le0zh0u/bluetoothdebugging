@@ -1,0 +1,17 @@
+{
+  "pages": [
+    "pages/deviceList/deviceList",
+    "pages/demoIndex/index",
+    "pages/logs/logs",
+    "pages/device/device",
+    "pages/devices/devices"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "蓝牙调试助手",
+    "navigationBarTextStyle": "black"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

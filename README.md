@@ -13,7 +13,19 @@
 
 ### 使用截图
 
+#### 蓝牙搜索
 
+![](http://img.leozhou.me/picGo/20211011003220.png)
+
+#### 获取蓝牙设备下服务和特征
+
+![](http://img.leozhou.me/picGo/20211011003128.png)
+
+
+
+#### 蓝牙发送 && 接收消息
+
+![](http://img.leozhou.me/picGo/20211011002925.png)
 
 
 

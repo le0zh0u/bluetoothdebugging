@@ -46,7 +46,6 @@
 <view>
   <button class="mg-10" wx:if="{{canWrite}}" size="mini" bindtap="writeBLECharacteristicValue">写数据</button>
 </view>
-<!-- <view class="" wx:if="{{connected}}"> -->
 <view class="flex_row">
   <view class="flex_column column_wrapper" wx:if="{{connected}}">
     <text class="text_title">serviceUUID</text>
@@ -60,13 +59,9 @@
         <view class="line"></view>
       </block>
     </block>
-    <!-- <view wx:for="{{chs}}" wx:key="index" style="font-size: 12px; margin-top: 10px;">
-    <view>特性UUID: {{item.uuid}}</view>
-    <view>特性值: {{item.value}}</view>
-  </view> -->
   </view>
   <view class="flex_column column_wrapper" wx:else>
-    <text class="error_tip" bindtap="reload">暂无数据~点击重试</text>
+    <text class="error_tip" bindtap="tapReload">暂无数据~点击重试</text>
   </view>
   <view class="v_line"></view>
   <view class="flex_column column_wrapper">

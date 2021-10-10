@@ -7,12 +7,11 @@
 				<checkbox value="isHexShow" checked="{{isHexShow}}" />HEX显示
 			</label>
 		</checkbox-group>
-		<view bindtap="clearReceived" class="clear" wx:if='{{receivedData && receivedData.length > 0}}'>清除内容</view>
 	</view>
 	<scroll-view scroll-y class="scroll" scroll-into-view="ffff" style="padding: 10rpx 10rpx">
 		<text class="receive">{{receivedData}}</text>
 	</scroll-view>
-
+	<view bindtap="clearReceived" class="clear" wx:if='{{receivedData && receivedData.length > 0}}'>清除内容</view>
 
 	<text class="received_text">send:</text>
 	<view class="flex_row received_menu">
@@ -26,7 +25,8 @@
 		</checkbox-group>
 	</view>
 	<view class="flex_row send_area">
-		<textarea value="{{sendMsg}}" class="text_input" bindinput='sendInput'/>
-		<button type="primary" size="mini" bindtap="tapSend" disabled="{{disabled}}" style="display: flex;justify-content: center;align-items: center;margin-left: 8rpx;margin-right: 0rpx;width: 160rpx;border-radius:1rpx;">按钮</button>
+		<textarea value="{{sendMsg}}" class="text_input" bindinput='bindSendMsgInput'/>
+		<button type="primary" size="mini" bindtap="tapSend" disabled="{{disabled}}" class="send_button">发送</button>
+		<button type="warn" size="mini" bindtap="tapClearSendMsg" disabled="{{disabled}}" class="send_button">清除</button>
 	</view>
 </view>

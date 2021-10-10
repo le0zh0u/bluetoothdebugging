@@ -17,6 +17,17 @@
 
 
 
+###  注意事项
+
+- 真机可调试，但是微信开发者工具中不行
+- 选择Characteristic时，需要注意显示的能力
+  - W：写
+  - N/I：变更通知
+  - R：可读
+- 有的Characteristic会出现具有RWN，但是无法注册notify成功，可以尝试其他的Characteristic
+
+
+
 ### CHANGELOG
 
 2021.10.01 之前

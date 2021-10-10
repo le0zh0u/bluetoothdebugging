@@ -28,11 +28,10 @@ Page({
     console.log('onUnload')
   },
   openBluetoothAdapter() {
-    console.log('openBluetoothAdapter doing')
     var that = this;
     wx.openBluetoothAdapter({
       success: (res) => {
-        console.log('openBluetoothAdapter success', res)
+        // console.log('openBluetoothAdapter success', res)
         that.setData({
           adapterAvailable: true
         })
@@ -53,7 +52,7 @@ Page({
         // handle for already opened. get state and set state
         wx.getBluetoothAdapterState({
           success: (res) => {
-            console.log(res)
+            // console.log(res)
             if(res.adapterState){
               that.setData({
                 adapterAvailable: res.adapterState.available,
@@ -90,7 +89,7 @@ Page({
   getBluetoothAdapterState() {
     wx.getBluetoothAdapterState({
       success: (res) => {
-        console.log('getBluetoothAdapterState', res)
+        // console.log('getBluetoothAdapterState', res)
         if (res.discovering) {
           this.onBluetoothDeviceFound()
         } else if (res.available) {
@@ -125,7 +124,7 @@ Page({
     wx.startBluetoothDevicesDiscovery({
       allowDuplicatesKey: true,
       success: (res) => {
-        console.debug('startBluetoothDevicesDiscovery success', res)
+        // console.debug('startBluetoothDevicesDiscovery success', res)
         this.setData({
           adapterDiscovering: true
         })
@@ -158,7 +157,7 @@ Page({
           this.successMsg('停止扫描设备')
         }, 
         fail: (res) => {
-          console.log(res)
+          console.log('stopBluetoothDevicesDiscovery',res)
           this.setData({
             adapterDiscovering: current
           })
@@ -176,7 +175,7 @@ Page({
         if (!device.name && !device.localName) {
           return
         }
-        console.log(device)
+        // console.log(device)
         const foundDevices = this.data.devices
         const idx = util.inArray(foundDevices, 'deviceId', device.deviceId)
         const data = {}

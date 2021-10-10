@@ -1,23 +1,86 @@
 <!--pages/device/device.wxml-->
+<wxs module="m1">
+  var getName = function (name) {
+
+    var index = name.indexOf('-')
+
+    var lastIndex = name.lastIndexOf('-')
+    if (index == -1 || lastIndex == -1) {
+      return name
+    }
+    return name.substring(0, index + 1) + '****' + name.substring(lastIndex, name.length)
+  }
+
+  var getAuth = function (item) {
+    var name = item.uuid
+
+    var properties = item.properties
+
+    var str = ''
+
+    if (properties.read) {
+      str += 'R'
+    }
+    if (properties.write) {
+      str += 'W'
+    }
+    if (properties.indicate) {
+      str += 'I'
+    }
+    if (properties.notify) {
+      str += 'N'
+    }
+
+
+    var index = name.indexOf('-')
+
+    var lastIndex = name.lastIndexOf('-')
+    if (index == -1 || lastIndex == -1) {
+      return name
+    }
+    return name.substring(0, index + 1) + '(' + str + ')' + name.substring(lastIndex, name.length)
+  }
+  module.exports.getName = getName;
+  module.exports.getAuth = getAuth;
+</wxs>
 <view>
-  <button class="mg-10" size="mini" 
-    bindtap="createBLEConnection"  
-    disabled="{{connected}}">
-    {{isConnected ? '已连接' : '开始连接'}}
-  </button>
-  <button class="mg-10" size="mini" bindtap="closeBLEConnection"
-    disabled="{{!connected}}"  >
-    断开连接
-  </button>
   <button class="mg-10" wx:if="{{canWrite}}" size="mini" bindtap="writeBLECharacteristicValue">写数据</button>
-  
 </view>
-<view class="connected_info" wx:if="{{connected}}">
-  <view>
-    <text>已连接到 {{name}}</text>
-  </view>
-  <view wx:for="{{chs}}" wx:key="index" style="font-size: 12px; margin-top: 10px;">
+<!-- <view class="" wx:if="{{connected}}"> -->
+<view class="flex_row">
+  <view class="flex_column column_wrapper" wx:if="{{connected}}">
+    <text class="text_title">serviceUUID</text>
+		<view class="line"></view>
+    <block wx:if="{{serviceUUIDs}}">
+      <block wx:for="{{serviceUUIDs}}" wx:key='item'>
+        <view class="cell text {{index == servicePosition? 'hover_click':''}}" bindtap="tapServiceUUID"
+          data-index="{{index}}">
+          {{m1.getName(item.uuid)}}
+        </view>
+        <view class="line"></view>
+      </block>
+    </block>
+    <!-- <view wx:for="{{chs}}" wx:key="index" style="font-size: 12px; margin-top: 10px;">
     <view>特性UUID: {{item.uuid}}</view>
     <view>特性值: {{item.value}}</view>
+  </view> -->
+  </view>
+  <view class="flex_column column_wrapper" wx:else>
+    <text class="error_tip" bindtap="reload">暂无数据~点击重试</text>
+  </view>
+  <view class="v_line"></view>
+  <view class="flex_column column_wrapper">
+    <text class="text_title">characteristicIdsUUID(RWIN)</text>
+		<view class="line"></view>
+
+		<block wx:if='{{characteristicUUIDs}}'>
+			<block wx:for='{{characteristicUUIDs}}' wx:key='item'>
+				<view hover-class="hover_click" class="cell text" bindtap="tapCharacteristicUUID" data-index="{{index}}">{{m1.getAuth(item)}}</view>
+				<view class="line"></view>
+			</block>
+		</block>
+		<block wx:else>
+			<text class="error_tip">暂无数据</text>
+		</block>
   </view>
 </view>

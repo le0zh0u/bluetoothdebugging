@@ -8,8 +8,12 @@ Page({
     connected: false,
     chs: [],
     adapterAvailable: false,
-    adapterDiscovering: false
+    adapterDiscovering: false,
+    searchDeviceKey: '',
+    searchedDevice: undefined,
+    hasFound: false
   },
+
   onLoad(){
     // this.openBluetoothAdapter()
   },
@@ -20,7 +24,8 @@ Page({
     this.closeBluetoothAdapter()
   },
   onUnload() {
-    this.closeBluetoothAdapter()
+    wx.closeBluetoothAdapter()
+    console.log('onUnload')
   },
   openBluetoothAdapter() {
     console.log('openBluetoothAdapter doing')
@@ -119,7 +124,6 @@ Page({
     })
     wx.startBluetoothDevicesDiscovery({
       allowDuplicatesKey: true,
-      powerLevel: 'high',
       success: (res) => {
         console.debug('startBluetoothDevicesDiscovery success', res)
         this.setData({
@@ -169,9 +173,6 @@ Page({
   onBluetoothDeviceFound() {
     wx.onBluetoothDeviceFound((res) => {
       res.devices.forEach(device => {
-        if(device.deviceId === this.data.searchDeviceId){
-          console.log("FOUND")
-        }
         if (!device.name && !device.localName) {
           return
         }
@@ -186,6 +187,8 @@ Page({
         }
         this.setData(data)
       })
+
+      this.searchDevice(this.data.searchDeviceKey, false)
     })
   },
   clearDeviceData(){
@@ -197,6 +200,8 @@ Page({
       connected: false,
       chs: [],
       adapterDiscovering: false,
+      searchedDevice: undefined,
+      hasFound: false
     })
   },
   /**
@@ -216,9 +221,32 @@ Page({
     })
   },
   closeBluetoothAdapter() {
-    wx.closeBluetoothAdapter()
+    wx.offBluetoothDeviceFound()
+    wx.stopBluetoothDevicesDiscovery()
     this.setData({
       adapterDiscovering: false
     })
+  },
+
+  searchDevice(key, fromInput) {
+    const data = {}
+    if(fromInput){
+      data['searchDeviceKey'] = key
+    }
+    if(key === ''){
+      data['searchedDevice'] = null
+      data['hasFound'] = false
+    } else {
+      const found = this.data.devices.find(item=> item.name && item.name.toUpperCase().startsWith(key.toUpperCase()))
+      data['searchedDevice'] = found
+      data['hasFound'] = found != undefined
+    }
+
+    this.setData(data)
+  },
+
+  // 绑定搜索设备动作
+  bindSearchDeviceKey: function (e) {
+    this.searchDevice(e.detail.value, true)
   },
 })

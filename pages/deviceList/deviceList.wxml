@@ -16,16 +16,28 @@ module.exports.len = function(arr) {
  <view>当前蓝牙状态：{{adapterAvailable}}</view>
  <view>扫描状态：{{adapterDiscovering}}</view>
 <view class="devices_summary">已发现 {{devices.length}} 个外围设备：</view>
+<view>
+ <input class="device_search_input" bindinput="bindSearchDeviceKey" placeholder="搜索外围设备"/>
+ <view wx:if="{{hasFound}}" class="device_item" style="background-color: #eee;"
+ data-device-id="{{searchedDevice.deviceId}}"
+   data-name="{{searchedDevice.name || searchedDevice.localName}}"
+   bindtap="tapDevice" >
+  <view class="device_item_name">{{searchedDevice.name}}</view>
+    <view class="device_item_property">信号强度: {{searchedDevice.RSSI}}dBm ({{utils.max(0, searchedDevice.RSSI + 100)}}%)</view>
+    <view class="device_item_property">UUID: {{searchedDevice.deviceId}}</view>
+    <view class="device_item_property">Service数量: {{utils.len(searchedDevice.advertisServiceUUIDs)}}</view>
+ </view>
+</view>
 <view class="device_list" >
-  <view wx:for="{{devices}}" wx:key="index"
+  <view wx:for="{{devices || allDevices}}" wx:key="index"
    data-device-id="{{item.deviceId}}"
    data-name="{{item.name || item.localName}}"
    bindtap="tapDevice" 
    class="device_item"
    hover-class="device_item_hover">
-    <view style="font-size: 16px; color: #333;">{{item.name}}</view>
-    <view style="font-size: 10px">信号强度: {{item.RSSI}}dBm ({{utils.max(0, item.RSSI + 100)}}%)</view>
-    <view style="font-size: 10px">UUID: {{item.deviceId}}</view>
-    <view style="font-size: 10px">Service数量: {{utils.len(item.advertisServiceUUIDs)}}</view>
+    <view class="device_item_name">{{item.name}}</view>
+    <view class="device_item_property">信号强度: {{item.RSSI}}dBm ({{utils.max(0, item.RSSI + 100)}}%)</view>
+    <view class="device_item_property">UUID: {{item.deviceId}}</view>
+    <view class="device_item_property">Service数量: {{utils.len(item.advertisServiceUUIDs)}}</view>
   </view>
 </view>

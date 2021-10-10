@@ -18,6 +18,19 @@ page {
   padding: 10px;
   color: #666;
 }
+.device_item > .device_item_name {
+  font-size: 16px; 
+  color: #333;
+}
+
+.device_item > .device_item_property{
+  font-size: 10px;
+}
+
 .device_item_hover {
   background-color: rgba(0, 0, 0, .1);
+}
+
+.device_search_input {
+  margin: 5px 10px;
 }

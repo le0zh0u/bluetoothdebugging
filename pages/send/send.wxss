@@ -1,0 +1,55 @@
+/* pages/send/send.wxss */
+
+page {
+  background-color: #F3F2F8;
+}
+
+.receive {
+  word-break: break-all;
+}
+
+.received_menu {
+  margin-bottom: 12rpx;
+  margin-left: 32rpx;
+}
+
+.received_text {
+  margin-top: 32rpx;
+  margin-bottom: 12rpx;
+  margin-left: 20rpx;
+  color: #8f8e94;
+  font-size: 22rpx;
+}
+
+.scroll {
+  height: 700rpx;
+  /* width: 95%;
+  margin: 0 auto;
+  padding-right: 10rpx;
+  padding-left: 10rpx; */
+  background-color: #fff;
+  border-top: 1rpx solid #dadadb;
+  border-bottom: 1rpx solid #dadadb;
+}
+
+.clear {
+  margin-left: 64rpx;
+  color: red;
+  font-size: 22rpx;
+  align-self: center;
+}
+
+.text_input {
+  background-color: #fff;
+  border-top: 1rpx solid #dadadb;
+  border-right: 1rpx solid #dadadb;
+  border-bottom: 1rpx solid #dadadb;
+  height: 180rpx;
+  flex-grow: 1;
+  padding: 10rpx;
+
+}
+
+.send_area {
+  height: 200rpx;
+}

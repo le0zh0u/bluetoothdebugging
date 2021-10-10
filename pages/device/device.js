@@ -9,11 +9,14 @@ Page({
   data: {
     deviceId: '',
     name: '',
-    adapterAvailable: false,
     sendData: '',
     connected: false,
     chs: [],
     canWrite: false,
+    characteristicUUIDs: null,
+    serviceUUIDs: null,
+    isFirtLoading: true,
+    servicePosition: 0,
   },
 
   /**
@@ -22,10 +25,19 @@ Page({
   onLoad: function (options) {
     this.setData({
       deviceId: options.deviceId,
-      name : options.name
+      name: options.name
     })
     wx.setNavigationBarTitle({
       title: options.name,
+    })
+
+    let that = this
+    wx.onBLEConnectionStateChange((res) => {
+      console.log(`device ${res.deviceId} state has changed, connected: ${res.connected}`)
+      if (!res.connected && res.deviceId == that.data.deviceId) {
+        console.log('设备连接已经断开')
+        that.closeBLEConnection(that.data.deviceId)
+      }
     })
   },
 
@@ -33,44 +45,55 @@ Page({
    * 生命周期函数--监听页面初次渲染完成
    */
   onReady: function () {
-    
+    this.createBLEConnection()
   },
 
   /**
    * 生命周期函数--监听页面显示
    */
   onShow: function () {
-    this.openBluetoothAdapter()
+    if (!this.data.isFirtLoading) {
+      if (!this.data.connected) {
+        this.setData({
+          characteristicUUIDs: null,
+          serviceUUIDs: null
+        })
+      }
+    }
+
+    this.setData({
+      isFirtLoading: false
+    })
   },
 
   /**
    * 生命周期函数--监听页面隐藏
    */
   onHide: function () {
-    if(this.data.connected){
-      this.closeBLEConnection()
-    }
-    this.closeBluetoothAdapter()
+    // if(this.data.connected){
+    //   this.closeBLEConnection()
+    // }
+    // this.closeBluetoothAdapter()
   },
 
   /**
    * 生命周期函数--监听页面卸载
    */
   onUnload: function () {
-    if(this.data.connected){
+    wx.offBLEConnectionStateChange()
+    if (this.data.connected) {
       this.closeBLEConnection()
     }
-    this.closeBluetoothAdapter()
   },
 
 
   /**
    * custom methods
    */
-   /**
-    * 打开蓝牙适配器
-    */
-   openBluetoothAdapter() {
+  /**
+   * 打开蓝牙适配器
+   */
+  openBluetoothAdapter() {
     console.log('openBluetoothAdapter doing')
     var that = this;
     wx.openBluetoothAdapter({
@@ -89,14 +112,14 @@ Page({
               adapterAvailable: res.available,
             })
           })
-          return ;
+          return;
         }
 
         // handle for already opened. get state and set state
         wx.getBluetoothAdapterState({
           success: (res) => {
             console.log(res)
-            if(res.adapterState){
+            if (res.adapterState) {
               that.setData({
                 adapterAvailable: res.adapterState.available,
               })
@@ -121,6 +144,9 @@ Page({
       adapterAvailable: false
     })
   },
+  reload(res) {
+    this.onReady()
+  },
   /**
    * 创建蓝牙连接
    */
@@ -129,6 +155,7 @@ Page({
     const name = this.data.name
     wx.showLoading({
       title: '连接中',
+      mask: true
     })
     wx.createBLEConnection({
       deviceId,
@@ -145,31 +172,56 @@ Page({
           icon: 'success',
           duration: 1000,
           mask: true //是否有透明蒙层，默认为false
-          })
+        })
       },
       fail: (res) => {
         console.log(res)
         wx.hideLoading()
+        that.setData({
+          servicePosition: 0
+        })
         wx.showToast({
           title: '设备连接失败',
           icon: 'error',
           duration: 1000,
-          mask: true //是否有透明蒙层，默认为false
-          })
+          mask: true, //是否有透明蒙层，默认为false
+        })
+
       }
+    })
+  },
+  showFail(text) {
+    wx.showToast({
+      title: text,
+      icon: 'none',
+      duration: 1000
     })
   },
   /**
    * 关闭蓝牙连接
    */
   closeBLEConnection() {
-    if(this.data.deviceId){
+    let that = this
+    if (this.data.deviceId) {
       wx.closeBLEConnection({
-        deviceId: this.data.deviceId
-      })  
+        deviceId: this.data.deviceId,
+        success: (res) => {
+          console.log('closeBLEConnection success', res)
+          wx.showToast({
+            title: that.data.name + '已断开',
+            icon: 'none',
+            duration: 1000
+          })
+        },
+        fail: (res) => {
+          console.log('closeBLEConnection fail', res)
+        }
+      })
     }
-    
+
     this.setData({
+      characteristicUUIDs: null,
+      serviceUUIDs: null,
       connected: false,
       chs: [],
       canWrite: false,
@@ -180,19 +232,129 @@ Page({
    * @param {} deviceId 
    */
   getBLEDeviceServices(deviceId) {
+    let that = this
     wx.getBLEDeviceServices({
       deviceId,
       success: (res) => {
-        console.log(res.services)
+        // console.log(res.services)
+        let serviceUUIDs = new Array()
         for (let i = 0; i < res.services.length; i++) {
           if (res.services[i].isPrimary) {
-            this.getBLEDeviceCharacteristics(deviceId, res.services[i].uuid)
-            return
+            serviceUUIDs.push(res.services[i])
+            // this.getBLEDeviceCharacteristics(deviceId, res.services[i].uuid)
+            // return
           }
         }
+        that.setData({
+          serviceUUIDs: serviceUUIDs
+        })
+
+        // get characteristics
+        that.fetchBLEDeviceCharacteristics(deviceId, serviceUUIDs[that.data.servicePosition].uuid, that.data.servicePosition)
+      },
+      fail: (res) => {
+        console.log('getBLEDeviceServices fail', res)
+        wx.hideLoading()
+        that.setData({
+          servicePosition: 0
+        })
+        wx.showToast({
+          title: '连接失败',
+        })
       }
     })
   },
+
+  /**
+   * 点击serviceUUID
+   * @param {event} e 
+   */
+  tapServiceUUID(e) {
+    let index = e.currentTarget.dataset.index
+    if (index != this.data.servicePosition) {
+      let servicePosition = this.data.servicePosition
+      this.setData({
+        servicePosition: index
+      })
+
+      this.fetchBLEDeviceCharacteristics(this.data.deviceId, this.data.serviceUUIDs[index].uuid, servicePosition)
+    }
+  },
+
+  tapCharacteristicUUID(e) {
+    let that = this
+    let index = e.target.dataset.index
+    let characteristicsUUID = that.data.characteristicUUIDs[index]
+    let deviceId = that.data.deviceId
+    let serviceUUID = that.data.serviceUUIDs[that.data.servicePosition]
+    let obj = {
+      characteristicsUUID: characteristicsUUID,
+      deviceId: deviceId,
+      serviceUUID: serviceUUID,
+      deviceName: that.data.name,
+      needClose: false
+    }
+
+    var data = JSON.stringify(obj);
+    wx.navigateTo({
+      url: '/pages/send/send?data=' + data,
+    })
+  },
+
+  /**
+   * 拉取特征值
+   * @param {*} deviceId 
+   * @param {*} uuid 
+   * @param {*} lastPosition 
+   */
+  fetchBLEDeviceCharacteristics(deviceId, uuid, lastPosition) {
+
+    wx.showLoading({
+      title: '特征值加载中',
+      mask: true,
+    })
+
+    let that = this
+    wx.getBLEDeviceCharacteristics({
+      deviceId: deviceId,
+      serviceId: uuid,
+      success(data) {
+        console.log('fetchBLEDeviceCharacteristics success', data)
+        setTimeout(() => {
+          wx.hideLoading({
+            complete: (res) => {
+              let characteristicUUIDs = new Array()
+              for (let i = 0; i < data.characteristics.length; i++) {
+                const item = data.characteristics[i];
+                characteristicUUIDs.push(item);
+              }
+
+              that.setData({
+                characteristicUUIDs: characteristicUUIDs
+              })
+            },
+          })
+        }, 400);
+
+      },
+      fail(res) {
+        console.log('fetchBLEDeviceCharacteristics fail', res)
+        setTimeout(() => {
+          wx.hideLoading({
+            success: (res) => {
+              that.setData({
+                servicePosition: lastPosition
+              })
+              that.showFail('连接失败')
+              that.closeBLEConnection()
+            },
+          })
+        }, 400);
+
+      }
+    })
+  },
+
   /**
    * 获取设备服务中所有特征
    * @param {*} deviceId 
@@ -229,7 +391,7 @@ Page({
               serviceId,
               characteristicId: item.uuid,
               state: true,
-              success (res) {
+              success(res) {
                 console.log('notifyBLECharacteristicValueChange success', res.errMsg)
               }
             })
@@ -249,17 +411,17 @@ Page({
       if (idx === -1) {
         data[`chs[${this.data.chs.length}]`] = {
           uuid: characteristic.characteristicId,
-          value: ab2hex(characteristic.value)
+          value: util.ab2hex(characteristic.value)
         }
       } else {
         data[`chs[${idx}]`] = {
           uuid: characteristic.characteristicId,
-          value: ab2hex(characteristic.value)
+          value: util.ab2hex(characteristic.value)
         }
       }
       // data[`chs[${this.data.chs.length}]`] = {
       //   uuid: characteristic.characteristicId,
-      //   value: ab2hex(characteristic.value)
+      //   value: util.ab2hex(characteristic.value)
       // }
       this.setData(data)
     })
@@ -267,51 +429,30 @@ Page({
   writeBLECharacteristicValue() {
     // 向蓝牙设备发送一个0x00的16进制数据
     // let buffer = new ArrayBuffer(1)     
- 
+
     let data = {
       latitude: "22.761592",
       longitude: "112.978089"
     }
     var buffer = stringToBytes("23.13265,112.978089")
- 
-    console.log("发送数据：", buffer) 
- 
+
+    console.log("发送数据：", buffer)
+
     let dataView = new DataView(buffer)
     dataView.setUint8(0, Math.random() * 255 | 0)
- 
+
     console.log("发送服务码：" + this._characteristicId)
- 
+
     wx.writeBLECharacteristicValue({
       deviceId: this._deviceId,
       serviceId: this._serviceId,
       characteristicId: this._characteristicId,
       value: buffer,
-      complete:res=>{
+      complete: res => {
         this.setData({
-          shuju:res
+          shuju: res
         })
       }
     })
   },
 })
-
-// ArrayBuffer转16进度字符串示例
-function ab2hex(buffer) {
-  var hexArr = Array.prototype.map.call(
-    new Uint8Array(buffer),
-    function (bit) {
-      return ('00' + bit.toString(16)).slice(-2)
-    }
-  )
-  return hexArr.join('');
-}
-
-// 字符串转byte
-function stringToBytes(str) {
-  var array = new Uint8Array(str.length);
-  for (var i = 0, l = str.length; i < l; i++) {
-    array[i] = str.charCodeAt(i);
-  }
-  console.log(array);
-  return array.buffer;
-}

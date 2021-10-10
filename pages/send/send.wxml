@@ -1,0 +1,32 @@
+<!--pages/send/send.wxml-->
+<view class="flex_column">
+	<text class="received_text">received:</text>
+	<view class="flex_row received_menu">
+		<checkbox-group bindchange="receivedMenuChange">
+			<label class="checkbox" style="margin-right:44rpx">
+				<checkbox value="isHexShow" checked="{{isHexShow}}" />HEX显示
+			</label>
+		</checkbox-group>
+		<view bindtap="clearReceived" class="clear" wx:if='{{receivedData && receivedData.length > 0}}'>清除内容</view>
+	</view>
+	<scroll-view scroll-y class="scroll" scroll-into-view="ffff" style="padding: 10rpx 10rpx">
+		<text class="receive">{{receivedData}}</text>
+	</scroll-view>
+
+
+	<text class="received_text">send:</text>
+	<view class="flex_row received_menu">
+		<checkbox-group bindchange="sendMenuChange">
+			<label class="checkbox" style="margin-right:44rpx">
+				<checkbox value="isHexShow" checked="{{sendHex}}" />HEX发送
+			</label>
+			<label class="checkbox">
+				<checkbox value="lineBreak" checked="{{sendLineBreak}}" />发送换行
+			</label>
+		</checkbox-group>
+	</view>
+	<view class="flex_row send_area">
+		<textarea value="{{sendMsg}}" class="text_input" bindinput='sendInput'/>
+		<button type="primary" size="mini" bindtap="tapSend" disabled="{{disabled}}" style="display: flex;justify-content: center;align-items: center;margin-left: 8rpx;margin-right: 0rpx;width: 160rpx;border-radius:1rpx;">按钮</button>
+	</view>
+</view>

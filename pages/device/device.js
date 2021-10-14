@@ -11,12 +11,10 @@ Page({
     name: '',
     sendData: '',
     connected: false,
-    chs: [],
-    canWrite: false,
     characteristicUUIDs: null,
     serviceUUIDs: null,
     isFirtLoading: true,
-    servicePosition: 0,
+    servicePosition: 0
   },
 
   /**
@@ -61,6 +59,13 @@ Page({
           characteristicUUIDs: null,
           serviceUUIDs: null
         })
+      } else {
+        console.log(this.data)
+        if(!this.data.serviceUUIDs){
+          this.getBLEDeviceServices(this.data.deviceId, false)
+        } else if(!this.data.characteristicUUIDs){
+          this.fetchBLEDeviceCharacteristics(this.data.deviceId, this.data.serviceUUIDs[this.data.servicePosition].uuid, this.data.servicePosition)
+        }
       }
     }
 
@@ -106,7 +111,7 @@ Page({
           name,
           deviceId,
         })
-        this.getBLEDeviceServices(deviceId)
+        this.getBLEDeviceServices(deviceId, true)
         wx.showToast({
           title: '设备连接成功',
           icon: 'success',
@@ -134,24 +139,47 @@ Page({
    * 获取设备服务
    * @param {} deviceId 
    */
-  getBLEDeviceServices(deviceId) {
+  getBLEDeviceServices(deviceId, directNavigate = false) {
     let that = this
     wx.getBLEDeviceServices({
       deviceId,
       success: (res) => {
         // console.log(res.services)
         let serviceUUIDs = new Array()
+        var PromiseAllArr  = [];
         for (let i = 0; i < res.services.length; i++) {
           if (res.services[i].isPrimary) {
+            if(directNavigate){
+              PromiseAllArr.push(that.fetchBLEDeviceCharacteristicsPromise(deviceId, res.services[i].uuid))
+            }
+
             serviceUUIDs.push(res.services[i])
             // this.getBLEDeviceCharacteristics(deviceId, res.services[i].uuid)
             // return
           }
         }
+        // check for auto connect
+        if(directNavigate){
+          Promise.all(PromiseAllArr).then(function(values){
+            values.forEach(service => {
+              console.log(service)
+              const chs = service.chs
+              if(chs){
+                if(chs.length === 1){
+                  const props = chs[0].properties
+                  if(props && props.write && props.read && (props.notify || props.indicate)){
+                    that.navigateToSend(deviceId, service.id, chs[0].uuid, that.data.name)
+                  }
+                }
+              }
+            });
+          })
+        }
+        
         that.setData({
           serviceUUIDs: serviceUUIDs
         })
-
+        
         // get characteristics
         that.fetchBLEDeviceCharacteristics(deviceId, serviceUUIDs[that.data.servicePosition].uuid, that.data.servicePosition)
       },
@@ -197,6 +225,38 @@ Page({
       serviceUUIDs: null,
       connected: false,
     })
+  },
+
+  /**
+   * 异步方式获取特征值
+   */
+  fetchBLEDeviceCharacteristicsPromise(deviceId, uuid){
+    return new Promise((resolve, reject) => {
+      wx.getBLEDeviceCharacteristics({
+        deviceId: deviceId,
+        serviceId: uuid,
+        success(data) {
+          // console.log(`fetchBLEDeviceCharacteristics success, ${uuid}`, data)
+          let characteristicUUIDs = new Array()
+          for (let i = 0; i < data.characteristics.length; i++) {
+            const item = data.characteristics[i];
+            characteristicUUIDs.push(item);
+          }
+
+          const service = {}
+          service.id = uuid
+          service['chs'] = characteristicUUIDs
+          resolve(service)
+        },
+        fail(res) {
+          // console.log(`fetchBLEDeviceCharacteristics fail, ${uuid}`, res)
+          reject({
+            id: uuid
+          })
+        }
+      })
+    })
+    
   },
 
 
@@ -292,11 +352,22 @@ Page({
     let characteristicsUUID = that.data.characteristicUUIDs[index]
     let deviceId = that.data.deviceId
     let serviceUUID = that.data.serviceUUIDs[that.data.servicePosition]
+    that.navigateToSend(deviceId, serviceUUID, characteristicsUUID, that.data.name)
+  },
+
+  /**
+   * 跳转到发送消息页面
+   * @param {*} deviceId 
+   * @param {*} serviceUUID 
+   * @param {*} characteristicsUUID 
+   * @param {*} deviceName 
+   */
+  navigateToSend(deviceId, serviceUUID, characteristicsUUID, deviceName){
     let obj = {
       characteristicsUUID: characteristicsUUID,
       deviceId: deviceId,
       serviceUUID: serviceUUID,
-      deviceName: that.data.name,
+      deviceName: deviceName,
       needClose: false
     }
 

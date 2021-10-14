@@ -150,7 +150,7 @@ Page({
         for (let i = 0; i < res.services.length; i++) {
           if (res.services[i].isPrimary) {
             if(directNavigate){
-              PromiseAllArr.push(that.fetchBLEDeviceCharacteristicsPromise(deviceId, res.services[i].uuid))
+              PromiseAllArr.push(that.fetchBLEDeviceCharacteristicsPromise(deviceId, res.services[i]))
             }
 
             serviceUUIDs.push(res.services[i])
@@ -164,11 +164,12 @@ Page({
             values.forEach(service => {
               console.log(service)
               const chs = service.chs
+              const serviceUUId = service.ser
               if(chs){
                 if(chs.length === 1){
                   const props = chs[0].properties
                   if(props && props.write && props.read && (props.notify || props.indicate)){
-                    that.navigateToSend(deviceId, service.id, chs[0].uuid, that.data.name)
+                    that.navigateToSend(deviceId, serviceUUId, chs[0], that.data.name)
                   }
                 }
               }
@@ -230,7 +231,8 @@ Page({
   /**
    * 异步方式获取特征值
    */
-  fetchBLEDeviceCharacteristicsPromise(deviceId, uuid){
+  fetchBLEDeviceCharacteristicsPromise(deviceId, serviceUUID){
+    const uuid = serviceUUID.uuid
     return new Promise((resolve, reject) => {
       wx.getBLEDeviceCharacteristics({
         deviceId: deviceId,
@@ -245,13 +247,15 @@ Page({
 
           const service = {}
           service.id = uuid
+          service.ser = serviceUUID
           service['chs'] = characteristicUUIDs
           resolve(service)
         },
         fail(res) {
           // console.log(`fetchBLEDeviceCharacteristics fail, ${uuid}`, res)
           reject({
-            id: uuid
+            id: uuid,
+            ser: serviceUUID
           })
         }
       })
